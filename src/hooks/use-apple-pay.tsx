@@ -56,8 +56,8 @@ export const useApplePay = ({ amount, orderLines }: UseApplePayProps) => {
           shipping_fee: 0,
           tax_amount: 0,
           order_lines: orderData,
-          success_url: `${window.location.origin}/thankyou`,
-          cancel_url: `${window.location.origin}/cancel?popup=true`,
+          success_url: `${window.location.origin}?payment=success`,
+          cancel_url: `${window.location.origin}`,
         }),
       });
 
