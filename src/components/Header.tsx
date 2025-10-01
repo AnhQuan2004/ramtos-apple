@@ -49,20 +49,7 @@ const Header = () => {
           </a>
         </nav>
 
-        {/* Sign In Button */}
-        <Button 
-          variant="default" 
-          className="bg-primary hover:bg-primary-hover"
-          onClick={() => setIsSignInModalOpen(true)}
-        >
-          Sign in with Aptos Passkey
-        </Button>
       </div>
-
-      <SignInModal 
-        open={isSignInModalOpen} 
-        onOpenChange={setIsSignInModalOpen} 
-      />
     </header>
   );
 };

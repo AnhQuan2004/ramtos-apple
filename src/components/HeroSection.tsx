@@ -6,13 +6,7 @@ const HeroSection = () => {
       <div className="max-w-4xl">
         {/* Logo and Brand */}
         <div className="flex items-center gap-2 mb-6">
-          <div className="flex items-center gap-1">
-            <div className="w-7 h-7 bg-foreground rounded-lg flex items-center justify-center">
-              <Database className="h-4 w-4 text-background" />
-            </div>
-            <div className="w-5 h-5 bg-foreground rounded-lg opacity-80"></div>
-            <div className="w-3 h-3 bg-foreground rounded-lg opacity-60"></div>
-          </div>
+          <img src="/logo.png" alt="Ramtos Logo" className="h-10 w-10" />
           <h1 className="text-xl font-bold">Ramtos</h1>
         </div>
 
@@ -26,23 +20,6 @@ const HeroSection = () => {
           Ramtos imagines a world where passwords are a thing of the past, and where the web is built natively for payments.
         </p>
 
-        {/* Installation Command */}
-        <div className="mb-6">
-          <div className="flex items-center gap-2 mb-3">
-            <button className="px-2 py-0.5 text-xs rounded-md bg-primary text-primary-foreground">
-              npm
-            </button>
-            <button className="px-2 py-0.5 text-xs rounded-md text-muted-foreground hover:text-foreground">
-              pnpm
-            </button>
-            <button className="px-2 py-0.5 text-xs rounded-md text-muted-foreground hover:text-foreground">
-              bun
-            </button>
-            <span className="text-muted-foreground ml-2">{'>'}</span>
-            <span className="text-code-keyword font-mono text-xs">npm</span>
-            <span className="text-foreground font-mono text-xs">install ramtos</span>
-          </div>
-        </div>
 
         {/* Code Block */}
         <div className="code-block mb-6">
@@ -51,16 +28,41 @@ const HeroSection = () => {
               <span className="text-xs text-muted-foreground">1</span>
               <span className="text-code-keyword text-sm">import</span>
               <span className="text-code-text text-sm">{'{'}</span>
-              <span className="text-code-text text-sm">Ramtos</span>
+              <span className="text-code-text text-sm">RamtosProvider</span>
               <span className="text-code-text text-sm">{'}'}</span>
               <span className="text-code-keyword text-sm">from</span>
-              <span className="text-code-string text-sm">'ramtos'</span>
+              <span className="text-code-string text-sm">'@ramtos/wallet'</span>
+              <span className="text-code-text text-sm">;</span>
             </div>
             <div className="flex items-center gap-2">
               <span className="text-xs text-muted-foreground">2</span>
-              <span className="text-code-text text-sm">Ramtos.</span>
-              <span className="text-code-keyword text-sm">create</span>
-              <span className="text-code-text text-sm">()</span>
+              <span className="text-code-keyword text-sm">export default function</span>
+              <span className="text-code-text text-sm">App() {'{'}</span>
+            </div>
+            <div className="flex items-center gap-2 pl-8">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-keyword text-sm">return</span>
+              <span className="text-code-text text-sm">(</span>
+            </div>
+            <div className="flex items-center gap-2 pl-16">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-text text-sm">&lt;RamtosProvider&gt;</span>
+            </div>
+            <div className="flex items-center gap-2 pl-24">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-text text-sm">&lt;YourApp /&gt;</span>
+            </div>
+            <div className="flex items-center gap-2 pl-16">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-text text-sm">&lt;/RamtosProvider&gt;</span>
+            </div>
+            <div className="flex items-center gap-2 pl-8">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-text text-sm">);</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground"></span>
+              <span className="text-code-text text-sm">{'}'}</span>
             </div>
           </div>
         </div>

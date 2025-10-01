@@ -6,6 +6,7 @@ import CallToAction from "@/components/CallToAction";
 import ImageSection from "@/components/ImageSection";
 import VideoSection from "@/components/VideoSection";
 import { GridBackground } from "@/components/ui/grid-background-demo";
+import Footer from "@/components/Footer";
 
 const Index = () => {
   return (
@@ -42,6 +43,8 @@ const Index = () => {
       
       {/* Section 3: Video Demo */}
       <VideoSection />
+      
+      <Footer />
     </div>
   );
 };

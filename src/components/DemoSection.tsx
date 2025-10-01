@@ -17,7 +17,7 @@ const DemoSection = () => {
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [aptosAddress, setAptosAddress] = useState<string | null>(null);
-  const [currentStep, setCurrentStep] = useState<'signin' | 'welcome' | 'product' | 'success' | 'balance'>('signin');
+  const [currentStep, setCurrentStep] = useState<'signin' | 'welcome' | 'product' | 'success' | 'balance' | 'swap' | 'subscribe' | 'send_tip' | 'buy_nft'>('signin');
   const [searchParams] = useSearchParams();
   
   // Use the balance hook to fetch account balance
@@ -205,19 +205,229 @@ const DemoSection = () => {
               
               <div 
                 className="w-16 h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30"
-                onClick={() => setCurrentStep('welcome')}
+                onClick={() => setCurrentStep('swap')}
               >
-                <ChevronRight className="h-8 w-8 text-white" />
+                <ArrowLeftRight className="h-8 w-8 text-white" />
               </div>
             </div>
             
             <div className="mt-4">
-              <div className="flex justify-center gap-3">
-                <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-                <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-                <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-                <div className="w-4 h-4 bg-primary rounded-full shadow-sm shadow-primary/50"></div>
-                <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
+              <div className="flex justify-center gap-2">
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </GridBackground>
+      );
+    } else if (currentStep === 'swap') {
+      return (
+        <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
+          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-sm font-medium text-primary mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
+              <h2 className="text-3xl font-semibold mb-2">Swap Tokens</h2>
+              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-muted-foreground">From</span>
+                  <span className="text-muted-foreground">Balance: {Number(aptBalance).toFixed(2)} APT</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <img src="/icon.png" alt="APT Icon" className="h-10 w-10 rounded-full" />
+                  <input type="number" placeholder="0.0" className="bg-transparent text-2xl font-bold w-full focus:outline-none" />
+                  <span className="text-2xl font-bold">APT</span>
+                </div>
+                <div className="text-right text-muted-foreground text-sm mt-2">
+                  ~${(Number(aptBalance) * 7.5).toFixed(2)} USD
+                </div>
+              </div>
+              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg">
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-muted-foreground">To</span>
+                  <span className="text-muted-foreground">Balance: {Number(usdcBalance).toFixed(2)} USDC</span>
+                </div>
+                <div className="flex items-center gap-4">
+                  <DollarSign className="h-10 w-10 text-blue-500" />
+                  <input type="number" placeholder="0.0" className="bg-transparent text-2xl font-bold w-full focus:outline-none" />
+                  <span className="text-2xl font-bold">USDC</span>
+                </div>
+                <div className="text-right text-muted-foreground text-sm mt-2">
+                  ~${Number(usdcBalance).toFixed(2)} USD
+                </div>
+              </div>
+              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
+                Swap
+              </Button>
+            </div>
+            <div className="mt-10 flex justify-between">
+              <div 
+                className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
+                onClick={() => setCurrentStep('balance')}
+              >
+                <ChevronRight className="h-8 w-8 text-primary rotate-180" />
+              </div>
+              <div 
+                className="w-16 h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30"
+                onClick={() => setCurrentStep('subscribe')}
+              >
+                <ChevronRight className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-center gap-2">
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </GridBackground>
+      );
+    } else if (currentStep === 'subscribe') {
+      return (
+        <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
+          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-sm font-medium text-primary mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
+              <h2 className="text-3xl font-semibold mb-2">Choose Your Plan</h2>
+              <div className="w-full space-y-4">
+                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
+                  <h3 className="text-xl font-medium">Weekly</h3>
+                  <p className="text-3xl font-bold">$5</p>
+                </div>
+                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
+                  <h3 className="text-xl font-medium">Monthly</h3>
+                  <p className="text-3xl font-bold">$15</p>
+                </div>
+                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
+                  <h3 className="text-xl font-medium">Yearly</h3>
+                  <p className="text-3xl font-bold">$150</p>
+                </div>
+              </div>
+              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
+                Subscribe
+              </Button>
+            </div>
+            <div className="mt-10 flex justify-between">
+              <div 
+                className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
+                onClick={() => setCurrentStep('swap')}
+              >
+                <ChevronRight className="h-8 w-8 text-primary rotate-180" />
+              </div>
+              <div 
+                className="w-16 h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30"
+                onClick={() => setCurrentStep('send_tip')}
+              >
+                <ChevronRight className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-center gap-2">
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </GridBackground>
+      );
+    } else if (currentStep === 'send_tip') {
+      return (
+        <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
+          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-sm font-medium text-primary mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
+              <h2 className="text-3xl font-semibold mb-2">Send a Tip</h2>
+              <div className="w-full">
+                <input
+                  type="text"
+                  placeholder="Enter recipient address"
+                  className="w-full bg-surface/50 border border-primary/20 rounded-xl p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
+              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
+                Send
+              </Button>
+            </div>
+            <div className="mt-10 flex justify-between">
+              <div 
+                className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
+                onClick={() => setCurrentStep('subscribe')}
+              >
+                <ChevronRight className="h-8 w-8 text-primary rotate-180" />
+              </div>
+              <div 
+                className="w-16 h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30"
+                onClick={() => setCurrentStep('buy_nft')}
+              >
+                <ChevronRight className="h-8 w-8 text-white" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-center gap-2">
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </GridBackground>
+      );
+    } else if (currentStep === 'buy_nft') {
+      return (
+        <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
+          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-sm font-medium text-primary mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
+              <h2 className="text-3xl font-semibold mb-2">Buy NFT</h2>
+              <div className="w-full flex flex-col items-center">
+                <img src="/nft.png" alt="NFT" className="rounded-lg shadow-lg mb-4 w-64 h-64 object-cover" />
+                <p className="text-2xl font-bold">10 APT</p>
+              </div>
+              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
+                Buy Now
+              </Button>
+            </div>
+            <div className="mt-10 flex justify-between">
+              <div 
+                className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
+                onClick={() => setCurrentStep('send_tip')}
+              >
+                <ChevronRight className="h-8 w-8 text-primary rotate-180" />
+              </div>
+            </div>
+            <div className="mt-4">
+              <div className="flex justify-center gap-2">
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+                <div className="w-3 h-3 bg-primary rounded-full"></div>
               </div>
             </div>
           </div>
@@ -271,13 +481,16 @@ const DemoSection = () => {
           </div>
           
           <div className="mt-4">
-          <div className="flex justify-center gap-3">
-            <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-            <div className="w-4 h-4 bg-primary rounded-full shadow-sm shadow-primary/50"></div>
-            <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-            <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-            <div className="w-4 h-4 bg-muted-foreground/30 rounded-full"></div>
-          </div>
+            <div className="flex justify-center gap-2">
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+            </div>
           </div>
           </div>
         </GridBackground>
@@ -381,12 +594,15 @@ const DemoSection = () => {
           </div>
           
           <div className="mt-4">
-            <div className="flex justify-center gap-1">
-              <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
-              <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
-              <div className="w-2 h-2 bg-primary rounded-full"></div>
-              <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
-              <div className="w-2 h-2 bg-muted-foreground/30 rounded-full"></div>
+            <div className="flex justify-center gap-2">
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-primary rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+              <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
             </div>
           </div>
           </div>
@@ -420,6 +636,9 @@ const DemoSection = () => {
         {/* Progress Dots */}
           <div className="flex justify-center gap-2">
             <div className="w-3 h-3 bg-primary rounded-full"></div>
+            <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+            <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
+            <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
             <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
             <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
             <div className="w-3 h-3 bg-muted-foreground/30 rounded-full"></div>
