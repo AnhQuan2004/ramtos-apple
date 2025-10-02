@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { X, Check, Shield, Wallet, Fingerprint, Key, Loader2 } from "lucide-react";
 import { Buffer } from "buffer";
-import { createCredential, getCredentialInfo } from "@/lib/webauthn";
+import { createCredential, getCredential, getCredentialInfo } from "@/lib/webauthn";
 import { useConfetti } from "@/hooks/use-confetti";
 
 interface SignInModalProps {
@@ -81,20 +81,32 @@ const SignInModal = ({ open, onOpenChange, onSignInSuccess }: SignInModalProps) 
       setIsSigningIn(true);
       setErrorMessage(null);
 
-      const savedCredential = localStorage.getItem("credentialData");
-      if (savedCredential && onSignInSuccess) {
-        try {
-          const credentialData = JSON.parse(savedCredential);
-          setShowSuccessMessage(true);
-          onSignInSuccess(credentialData.publicKey.aptosAddress);
-        } catch (error) {
-          console.error("Failed to parse credential data:", error);
-          throw new Error("Failed to parse stored credential data");
+      const allowCredentials: PublicKeyCredentialDescriptor[] = [
+        {
+          type: "public-key",
+          id: Buffer.from(credentialId, "base64"),
+        },
+      ];
+
+      const credential = await getCredential(allowCredentials);
+
+      if (credential) {
+        const savedCredential = localStorage.getItem("credentialData");
+        if (savedCredential && onSignInSuccess) {
+          try {
+            const credentialData = JSON.parse(savedCredential);
+            setShowSuccessMessage(true);
+            onSignInSuccess(credentialData.publicKey.aptosAddress);
+          } catch (error) {
+            console.error("Failed to parse credential data:", error);
+            throw new Error("Failed to parse stored credential data");
+          }
+        } else {
+          throw new Error("No saved credential data found");
         }
       } else {
-        throw new Error("No saved credential data found");
+        throw new Error("Sign in failed");
       }
-      
     } catch (error: any) {
       console.error("Signing failed:", error);
       setErrorMessage(`Signing failed: ${error.message || error}`);

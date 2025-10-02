@@ -114,8 +114,6 @@ const DemoSection = () => {
   
   // Handle sign out
   const handleSignOut = () => {
-    localStorage.removeItem("credentialId");
-    localStorage.removeItem("credentialData");
     setIsSignedIn(false);
     setAptosAddress(null);
     setCurrentStep('signin');
