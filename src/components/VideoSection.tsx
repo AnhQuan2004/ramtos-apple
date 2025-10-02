@@ -15,17 +15,7 @@ const VideoSection = () => {
           </p>
           
           <div className="relative w-full max-w-5xl mx-auto aspect-video bg-black/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-            {/* Replace with actual video embed */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center">
-                <div className="w-20 h-20 rounded-full bg-primary/20 backdrop-blur-sm flex items-center justify-center mx-auto mb-4 border border-primary/40">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
-                  </svg>
-                </div>
-                <p className="text-lg text-muted-foreground">Video demo coming soon</p>
-              </div>
-            </div>
+            <img src="/external-device.gif" alt="Ramtos Demo" className="absolute inset-0 w-full h-full object-contain" />
           </div>
           
           <div className="mt-16 flex flex-col items-center">
