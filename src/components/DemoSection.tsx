@@ -9,16 +9,34 @@ import SignInModal from "./SignInModal";
 import { GridBackground } from "@/components/ui/grid-background-demo";
 import { useApplePay } from "@/hooks/use-apple-pay";
 import { useBalance } from "@/hooks/use-balance";
-
+import { useConfetti } from "@/hooks/use-confetti";
+import { submitTransfer, checkTransactionStatusWithTimeout, currentNetwork, swapWithPasskey } from "@/lib/webauthn";
 import { useSearchParams } from "react-router-dom";
 
 const DemoSection = () => {
   const { handleApplePay, isLoading: isLoadingPay, error: payError } = useApplePay({});
+  const { triggerConfetti } = useConfetti();
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [aptosAddress, setAptosAddress] = useState<string | null>(null);
   const [currentStep, setCurrentStep] = useState<'signin' | 'welcome' | 'product' | 'success' | 'balance' | 'swap' | 'subscribe' | 'send_tip' | 'buy_nft'>('signin');
   const [searchParams] = useSearchParams();
+  const [tipAddress, setTipAddress] = useState('');
+  const [tipAmount, setTipAmount] = useState('0.1');
+  const [isSendingTip, setIsSendingTip] = useState(false);
+  const [tipStatus, setTipStatus] = useState('');
+  const [tipTxHash, setTipTxHash] = useState('');
+  const [isBuyingNft, setIsBuyingNft] = useState(false);
+  const [buyNftStatus, setBuyNftStatus] = useState('');
+  const [buyNftTxHash, setBuyNftTxHash] = useState('');
+  const [subscriptionAmount, setSubscriptionAmount] = useState(0.1); // Default to 0.1 APT
+  const [isSubscribing, setIsSubscribing] = useState(false);
+  const [subscribeStatus, setSubscribeStatus] = useState('');
+  const [subscribeTxHash, setSubscribeTxHash] = useState('');
+  const [swapAmount, setSwapAmount] = useState('0.1');
+  const [isSwapping, setIsSwapping] = useState(false);
+  const [swapStatus, setSwapStatus] = useState('');
+  const [swapTxHash, setSwapTxHash] = useState('');
   
   // Use the balance hook to fetch account balance
   const { 
@@ -65,11 +83,12 @@ const DemoSection = () => {
 
     if (searchParams.get('payment') === 'success') {
       setCurrentStep('success');
+      triggerConfetti('celebration');
       handlePaymentSuccess();
       
       const timer = setTimeout(() => {
         setCurrentStep('product');
-      }, 2000);
+      }, 5000);
 
       // Cleanup the timer if the component unmounts or dependencies change
       return () => clearTimeout(timer);
@@ -115,20 +134,21 @@ const DemoSection = () => {
     setAptosAddress(address);
     setCurrentStep('welcome');
     setIsSignInModalOpen(false);
+    triggerConfetti('success');
   };
   
   if (isSignedIn) {
     if (currentStep === 'balance') {
       return (
         <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
-          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
-            <div className="text-sm font-medium text-primary mb-6">Demo</div>
+          <div className="p-4 sm:p-6 md:p-10 min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-xs sm:text-sm font-medium text-primary mb-4 sm:mb-6">Demo</div>
             
-            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
+            <div className="flex-grow flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8">
               {/* Balance Header */}
               <div className="w-full text-center">
-                <h2 className="text-3xl font-semibold mb-2">Your Balance</h2>
-                <p className="text-muted-foreground text-lg mb-8">
+                <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Your Balance</h2>
+                <p className="text-muted-foreground text-base sm:text-lg mb-6 sm:mb-8">
                   View your available assets
                 </p>
               </div>
@@ -147,67 +167,55 @@ const DemoSection = () => {
                   <p>No coins found in this wallet</p>
                 </div>
               ) : (
-                <div className="space-y-6 w-full">
+                <div className="space-y-4 sm:space-y-6 w-full">
                   {balance.map((coin, index) => (
-                    <div key={coin.coin_type} className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg">
-                      <div className="flex items-center justify-between mb-6">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-14 h-14 rounded-full flex items-center justify-center ${
+                    <div key={coin.coin_type} className="w-full bg-surface/50 border border-primary/20 rounded-xl p-4 sm:p-6 shadow-lg">
+                      <div className="flex items-center justify-between mb-4 sm:mb-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className={`w-10 h-10 sm:w-14 sm:h-14 rounded-full flex items-center justify-center ${
                             coin.symbol === 'APT' ? '' : 
                             coin.symbol === 'USDC' ? 'bg-blue-500' : 
                             coin.symbol === 'USDT' ? 'bg-green-500' : 'bg-gray-500'
                           }`}>
                             {coin.symbol === 'APT' ? (
-                              <img src="/icon.png" alt="APT Icon" className="h-14 w-14 rounded-full" />
+                              <img src="/icon.png" alt="APT Icon" className="h-10 w-10 sm:h-14 sm:w-14 rounded-full" />
                             ) : (
-                              <DollarSign className="h-8 w-8 text-white" />
+                              <img src="/usdc.png" alt="USDC Icon" className="h-6 w-6 sm:h-8 sm:w-8 rounded-full" />
                             )}
                           </div>
                           <div>
-                            <h3 className="text-xl font-medium">{coin.symbol}</h3>
-                            <p className="text-muted-foreground">{coin.name}</p>
+                            <h3 className="text-lg sm:text-xl font-medium">{coin.symbol}</h3>
+                            <p className="text-sm sm:text-base text-muted-foreground">{coin.name}</p>
                           </div>
                         </div>
                         
                         <div className="text-right">
-                          <p className="text-3xl font-bold">{coin.formattedAmount}</p>
+                          <p className="text-xl sm:text-3xl font-bold">{coin.formattedAmount}</p>
                           {coin.symbol === 'USDC' || coin.symbol === 'USDT' ? (
-                            <p className="text-muted-foreground">${coin.formattedAmount} USD</p>
+                            <p className="text-sm sm:text-base text-muted-foreground">${coin.formattedAmount} USD</p>
                           ) : null}
                         </div>
                       </div>
                       
-                      {index === 0 && (
-                        <div className="flex justify-between gap-4 mt-6">
-                          <Button className="flex-1 bg-blue-500 hover:bg-blue-600">
-                            <ArrowUpRight className="h-5 w-5 mr-2" />
-                            Send
-                          </Button>
-                          <Button className="flex-1 bg-blue-500 hover:bg-blue-600">
-                            <CreditCard className="h-5 w-5 mr-2" />
-                            Deposit
-                          </Button>
-                        </div>
-                      )}
                     </div>
                   ))}
                 </div>
               )}
             </div>
             
-            <div className="mt-10 flex justify-between">
+            <div className="mt-8 sm:mt-10 flex justify-between">
               <div 
-                className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20 touch-manipulation"
                 onClick={() => setCurrentStep('product')}
               >
-                <ChevronRight className="h-8 w-8 text-primary rotate-180" />
+                <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8 text-primary rotate-180" />
               </div>
               
               <div 
-                className="w-16 h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30"
+                className="w-14 h-14 sm:w-16 sm:h-16 bg-primary rounded-full flex items-center justify-center cursor-pointer shadow-lg hover:shadow-xl transition-all border-2 border-primary/30 touch-manipulation"
                 onClick={() => setCurrentStep('swap')}
               >
-                <ArrowLeftRight className="h-8 w-8 text-white" />
+                <ArrowLeftRight className="h-6 w-6 sm:h-8 sm:w-8 text-white" />
               </div>
             </div>
             
@@ -229,41 +237,102 @@ const DemoSection = () => {
     } else if (currentStep === 'swap') {
       return (
         <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
-          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
-            <div className="text-sm font-medium text-primary mb-6">Demo</div>
-            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
-              <h2 className="text-3xl font-semibold mb-2">Swap Tokens</h2>
-              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-muted-foreground">From</span>
-                  <span className="text-muted-foreground">Balance: {Number(aptBalance).toFixed(2)} APT</span>
+          <div className="p-4 sm:p-6 md:p-10 min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-xs sm:text-sm font-medium text-primary mb-4 sm:mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8">
+              <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Swap Tokens</h2>
+              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-4 sm:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                  <span className="text-muted-foreground text-sm sm:text-base">From</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">Balance: {aptBalance ? Number(aptBalance.formattedAmount).toFixed(2) : '0.00'} APT</span>
                 </div>
-                <div className="flex items-center gap-4">
-                  <img src="/icon.png" alt="APT Icon" className="h-10 w-10 rounded-full" />
-                  <input type="number" placeholder="0.0" className="bg-transparent text-2xl font-bold w-full focus:outline-none" />
-                  <span className="text-2xl font-bold">APT</span>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <img src="/icon.png" alt="APT Icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full flex-shrink-0" />
+                  <input 
+                    type="number" 
+                    placeholder="0.0" 
+                    value={swapAmount} 
+                    onChange={(e) => setSwapAmount(e.target.value)} 
+                    className="bg-transparent text-xl sm:text-2xl font-bold w-full focus:outline-none" 
+                  />
+                  <span className="text-lg sm:text-2xl font-bold flex-shrink-0">APT</span>
                 </div>
-                <div className="text-right text-muted-foreground text-sm mt-2">
-                  ~${(Number(aptBalance) * 7.5).toFixed(2)} USD
-                </div>
-              </div>
-              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-muted-foreground">To</span>
-                  <span className="text-muted-foreground">Balance: {Number(usdcBalance).toFixed(2)} USDC</span>
-                </div>
-                <div className="flex items-center gap-4">
-                  <DollarSign className="h-10 w-10 text-blue-500" />
-                  <input type="number" placeholder="0.0" className="bg-transparent text-2xl font-bold w-full focus:outline-none" />
-                  <span className="text-2xl font-bold">USDC</span>
-                </div>
-                <div className="text-right text-muted-foreground text-sm mt-2">
-                  ~${Number(usdcBalance).toFixed(2)} USD
+                <div className="text-right text-muted-foreground text-xs sm:text-sm mt-2">
+                  ~${(Number(swapAmount) * 7.5).toFixed(2)} USD
                 </div>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
-                Swap
+              <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-4 sm:p-6 shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+                  <span className="text-muted-foreground text-sm sm:text-base">To</span>
+                  <span className="text-muted-foreground text-xs sm:text-sm">Balance: {usdcBalance ? Number(usdcBalance.formattedAmount).toFixed(2) : '0.00'} USDC</span>
+                </div>
+                <div className="flex items-center gap-3 sm:gap-4">
+                  <img src="/usdc.png" alt="USDC Icon" className="h-8 w-8 sm:h-10 sm:w-10 rounded-full flex-shrink-0" />
+                  <input 
+                    type="number" 
+                    placeholder="0.0" 
+                    value={(Number(swapAmount) * 7.45).toFixed(2)} 
+                    readOnly 
+                    className="bg-transparent text-xl sm:text-2xl font-bold w-full focus:outline-none" 
+                  />
+                  <span className="text-lg sm:text-2xl font-bold flex-shrink-0">USDC</span>
+                </div>
+                <div className="text-right text-muted-foreground text-xs sm:text-sm mt-2">
+                  ~${(Number(swapAmount) * 7.45).toFixed(2)} USD
+                </div>
+              </div>
+              <Button 
+                className="w-full bg-primary hover:bg-primary-hover glow-effect" 
+                size="lg"
+                onClick={async () => {
+                  try {
+                    setIsSwapping(true);
+                    setSwapStatus('Processing swap...');
+                    const credentialId = localStorage.getItem("credentialId");
+                    if (!credentialId) {
+                      throw new Error("No credential found");
+                    }
+                    const hash = await swapWithPasskey(
+                      credentialId,
+                      "0x1::aptos_coin::AptosCoin",
+                      "0x97f28f805f9e8ab3928488d8efc903c347328ba584558b4eb6a8ea7483dc7b11::coins::USDC",
+                      parseFloat(swapAmount) * 100000000,
+                      10000
+                    );
+                    if (hash) {
+                      setSwapTxHash(hash);
+                      setSwapStatus('Transaction submitted, checking status...');
+                      const status = await checkTransactionStatusWithTimeout(hash);
+                      setSwapStatus(status);
+                      if (status.includes('success') || status.includes('Success')) {
+                        triggerConfetti('success');
+                      }
+                    }
+                  } catch (error: any) {
+                    setSwapStatus(`Swap failed: ${error.message}`);
+                  } finally {
+                    setIsSwapping(false);
+                  }
+                }}
+                disabled={isSwapping || !swapAmount || parseFloat(swapAmount) <= 0}
+              >
+                {isSwapping ? 'Swapping...' : 'Swap'}
               </Button>
+              {swapStatus && <p className="text-sm text-center mt-2">{swapStatus}</p>}
+              {swapTxHash && (
+                <div className="w-full text-center mt-4">
+                  <p className="text-sm font-mono break-all">{swapTxHash}</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      const explorerUrl = `${currentNetwork.explorerUrl}/${swapTxHash}?network=${currentNetwork.name.toLowerCase()}`;
+                      window.open(explorerUrl, "_blank");
+                    }}
+                  >
+                    View in Aptos Explorer
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="mt-10 flex justify-between">
               <div 
@@ -302,22 +371,70 @@ const DemoSection = () => {
             <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
               <h2 className="text-3xl font-semibold mb-2">Choose Your Plan</h2>
               <div className="w-full space-y-4">
-                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
-                  <h3 className="text-xl font-medium">Weekly</h3>
-                  <p className="text-3xl font-bold">$5</p>
-                </div>
-                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
-                  <h3 className="text-xl font-medium">Monthly</h3>
-                  <p className="text-3xl font-bold">$15</p>
-                </div>
-                <div className="w-full bg-surface/50 border border-primary/20 rounded-xl p-6 shadow-lg text-center">
-                  <h3 className="text-xl font-medium">Yearly</h3>
-                  <p className="text-3xl font-bold">$150</p>
-                </div>
+                {[
+                  { name: 'Weekly', amount: 0.001 },
+                  { name: 'Monthly', amount: 0.1 },
+                  { name: 'Yearly', amount: 1 },
+                ].map((plan) => (
+                  <Button
+                    key={plan.name}
+                    variant={subscriptionAmount === plan.amount ? 'default' : 'outline'}
+                    className="w-full justify-between h-20 text-left"
+                    onClick={() => setSubscriptionAmount(plan.amount)}
+                  >
+                    <span className="text-xl font-medium">{plan.name}</span>
+                    <span className="text-3xl font-bold">{plan.amount} APT</span>
+                  </Button>
+                ))}
               </div>
-              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
-                Subscribe
+              <Button 
+                className="w-full bg-primary hover:bg-primary-hover glow-effect" 
+                size="lg"
+                onClick={async () => {
+                  try {
+                    setIsSubscribing(true);
+                    setSubscribeStatus('Processing subscription...');
+                    const credentialId = localStorage.getItem("credentialId");
+                    const hash = await submitTransfer(
+                      credentialId || undefined,
+                      aptosAddress || undefined,
+                      "0xb485454eba35a2441814f6b635c7bd9b24ae4012a97884f39fc1cd1148122c3a",
+                      subscriptionAmount * 100000000
+                    );
+                    if (hash) {
+                      setSubscribeTxHash(hash);
+                      setSubscribeStatus('Transaction submitted, checking status...');
+                      const status = await checkTransactionStatusWithTimeout(hash);
+                      setSubscribeStatus(status);
+                      if (status.includes('success') || status.includes('Success')) {
+                        triggerConfetti('success');
+                      }
+                    }
+                  } catch (error: any) {
+                    setSubscribeStatus(`Subscription failed: ${error.message}`);
+                  } finally {
+                    setIsSubscribing(false);
+                  }
+                }}
+                disabled={isSubscribing}
+              >
+                {isSubscribing ? 'Processing...' : 'Subscribe'}
               </Button>
+              {subscribeStatus && <p className="text-sm text-center mt-2">{subscribeStatus}</p>}
+              {subscribeTxHash && (
+                <div className="w-full text-center mt-4">
+                  <p className="text-sm font-mono break-all">{subscribeTxHash}</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      const explorerUrl = `${currentNetwork.explorerUrl}/${subscribeTxHash}?network=${currentNetwork.name.toLowerCase()}`;
+                      window.open(explorerUrl, "_blank");
+                    }}
+                  >
+                    View in Aptos Explorer
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="mt-10 flex justify-between">
               <div 
@@ -351,22 +468,76 @@ const DemoSection = () => {
     } else if (currentStep === 'send_tip') {
       return (
         <GridBackground className="border-2 border-primary/30 shadow-lg shadow-primary/10 rounded-2xl overflow-hidden">
-          <div className="p-6 md:p-10 min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
-            <div className="text-sm font-medium text-primary mb-6">Demo</div>
-            <div className="flex-grow flex flex-col items-center justify-center space-y-6 md:space-y-8">
-              <h2 className="text-3xl font-semibold mb-2">Send a Tip</h2>
-              <div className="w-full">
-                <input
-                  type="text"
-                  placeholder="Enter recipient address"
-                  className="w-full bg-surface/50 border border-primary/20 rounded-xl p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+          <div className="p-4 sm:p-6 md:p-10 min-h-[500px] sm:min-h-[600px] md:min-h-[700px] flex flex-col relative z-20">
+            <div className="text-xs sm:text-sm font-medium text-primary mb-4 sm:mb-6">Demo</div>
+            <div className="flex-grow flex flex-col items-center justify-center space-y-4 sm:space-y-6 md:space-y-8">
+              <h2 className="text-2xl sm:text-3xl font-semibold mb-2">Send a Tip</h2>
+                <div className="w-full space-y-3 sm:space-y-4">
+                  <input
+                    type="text"
+                    placeholder="Enter recipient address"
+                    value={tipAddress}
+                    onChange={(e) => setTipAddress(e.target.value)}
+                    className="w-full bg-surface/50 border border-primary/20 rounded-xl p-3 sm:p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Enter amount"
+                    value={tipAmount}
+                    onChange={(e) => setTipAmount(e.target.value)}
+                    className="w-full bg-surface/50 border border-primary/20 rounded-xl p-3 sm:p-4 shadow-lg focus:outline-none focus:ring-2 focus:ring-primary text-sm sm:text-base"
+                  />
+                </div>
+                <Button 
+                  className="w-full bg-primary hover:bg-primary-hover glow-effect" 
+                  size="lg"
+                  onClick={async () => {
+                    try {
+                      setIsSendingTip(true);
+                      setTipStatus('Sending tip...');
+                      const credentialId = localStorage.getItem("credentialId");
+                      const hash = await submitTransfer(
+                        credentialId || undefined,
+                        aptosAddress || undefined,
+                        tipAddress,
+                        parseFloat(tipAmount) * 100000000
+                      );
+                      if (hash) {
+                        setTipTxHash(hash);
+                        setTipStatus('Transaction submitted, checking status...');
+                        const status = await checkTransactionStatusWithTimeout(hash);
+                        setTipStatus(status);
+                        if (status.includes('success') || status.includes('Success')) {
+                          triggerConfetti('success');
+                        }
+                      }
+                    } catch (error: any) {
+                      setTipStatus(`Failed to send tip: ${error.message}`);
+                    } finally {
+                      setIsSendingTip(false);
+                    }
+                  }}
+                  disabled={isSendingTip || !tipAddress || !tipAmount}
+                >
+                  {isSendingTip ? 'Sending...' : 'Send'}
+                </Button>
+                {tipStatus && <p className="text-sm text-center mt-2">{tipStatus}</p>}
+                {tipTxHash && (
+                  <div className="w-full text-center mt-4">
+                    <p className="text-sm font-mono break-all">{tipTxHash}</p>
+                    <Button
+                      variant="link"
+                      onClick={() => {
+                        const explorerUrl = `${currentNetwork.explorerUrl}/${tipTxHash}?network=${currentNetwork.name.toLowerCase()}`;
+                        window.open(explorerUrl, "_blank");
+                      }}
+                    >
+                      View in Aptos Explorer
+                    </Button>
+                  </div>
+                )}
               </div>
-              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
-                Send
-              </Button>
-            </div>
-            <div className="mt-10 flex justify-between">
+              <div className="mt-10 flex justify-between">
               <div 
                 className="w-16 h-16 bg-surface/70 rounded-full flex items-center justify-center cursor-pointer shadow-md hover:shadow-lg transition-all border border-primary/20"
                 onClick={() => setCurrentStep('subscribe')}
@@ -404,11 +575,56 @@ const DemoSection = () => {
               <h2 className="text-3xl font-semibold mb-2">Buy NFT</h2>
               <div className="w-full flex flex-col items-center">
                 <img src="/nft.png" alt="NFT" className="rounded-lg shadow-lg mb-4 w-64 h-64 object-cover" />
-                <p className="text-2xl font-bold">10 APT</p>
+                <p className="text-2xl font-bold">0.001 APT</p>
               </div>
-              <Button className="w-full bg-primary hover:bg-primary-hover glow-effect" size="lg">
-                Buy Now
+              <Button 
+                className="w-full bg-primary hover:bg-primary-hover glow-effect" 
+                size="lg"
+                onClick={async () => {
+                  try {
+                    setIsBuyingNft(true);
+                    setBuyNftStatus('Processing purchase...');
+                    const credentialId = localStorage.getItem("credentialId");
+                    const hash = await submitTransfer(
+                      credentialId || undefined,
+                      aptosAddress || undefined,
+                      "0xb485454eba35a2441814f6b635c7bd9b24ae4012a97884f39fc1cd1148122c3a",
+                      0.001 * 100000000
+                    );
+                    if (hash) {
+                      setBuyNftTxHash(hash);
+                      setBuyNftStatus('Transaction submitted, checking status...');
+                      const status = await checkTransactionStatusWithTimeout(hash);
+                      setBuyNftStatus(status);
+                      if (status.includes('success') || status.includes('Success')) {
+                        triggerConfetti('fireworks');
+                      }
+                    }
+                  } catch (error: any) {
+                    setBuyNftStatus(`Failed to buy NFT: ${error.message}`);
+                  } finally {
+                    setIsBuyingNft(false);
+                  }
+                }}
+                disabled={isBuyingNft}
+              >
+                {isBuyingNft ? 'Processing...' : 'Buy Now'}
               </Button>
+              {buyNftStatus && <p className="text-sm text-center mt-2">{buyNftStatus}</p>}
+              {buyNftTxHash && (
+                <div className="w-full text-center mt-4">
+                  <p className="text-sm font-mono break-all">{buyNftTxHash}</p>
+                  <Button
+                    variant="link"
+                    onClick={() => {
+                      const explorerUrl = `${currentNetwork.explorerUrl}/${buyNftTxHash}?network=${currentNetwork.name.toLowerCase()}`;
+                      window.open(explorerUrl, "_blank");
+                    }}
+                  >
+                    View in Aptos Explorer
+                  </Button>
+                </div>
+              )}
             </div>
             <div className="mt-10 flex justify-between">
               <div 

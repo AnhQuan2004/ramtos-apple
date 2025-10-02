@@ -35,7 +35,7 @@ export function useBalance(address: string | null) {
       
       try {
         // Make API call to get portfolio data
-        const response = await fetch(`https://nguyenanhquan.online/portfolio/${address}`);
+        const response = await fetch(`https://nguyenanhquan.online/portfolio/${address}`, { cache: 'no-store' });
         
         if (!response.ok) {
           throw new Error(`API error: ${response.status}`);
@@ -65,6 +65,12 @@ export function useBalance(address: string | null) {
     };
     
     fetchBalance();
+
+    const interval = setInterval(() => {
+      fetchBalance();
+    }, 5000);
+
+    return () => clearInterval(interval);
   }, [address]);
   
   // Format amount based on decimals

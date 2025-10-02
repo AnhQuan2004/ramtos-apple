@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { X, Check, Shield, Wallet, Fingerprint, Key, Loader2 } from "lucide-react";
 import { Buffer } from "buffer";
 import { createCredential, getCredentialInfo } from "@/lib/webauthn";
+import { useConfetti } from "@/hooks/use-confetti";
 
 interface SignInModalProps {
   open: boolean;
@@ -13,6 +14,7 @@ interface SignInModalProps {
 }
 
 const SignInModal = ({ open, onOpenChange, onSignInSuccess }: SignInModalProps) => {
+  const { triggerConfetti } = useConfetti();
   const [email, setEmail] = useState("");
   const [credentialId, setCredentialId] = useState<string | null>(
     localStorage.getItem("credentialId")
@@ -23,47 +25,42 @@ const SignInModal = ({ open, onOpenChange, onSignInSuccess }: SignInModalProps) 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [passkeyInfo, setPasskeyInfo] = useState<any>(null);
 
-  // Simulate passkey creation instead of using actual WebAuthn
   const createPasskey = async () => {
     try {
       setIsCreatingPasskey(true);
       setErrorMessage(null);
 
-      // Simulate a delay to make it feel like something is happening
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const credential = await createCredential();
       
-      // Generate a mock credential ID and address
-      const mockCredentialId = `mock-credential-${Date.now()}`;
-      const mockAddress = "0x" + Array.from({length: 64}, () => Math.floor(Math.random() * 16).toString(16)).join('');
-      
-      // Create a mock credential info object
-      const mockCredentialInfo = {
-        id: mockCredentialId,
-        type: "public-key",
-        publicKey: {
-          base64: "mock-public-key-base64",
-          hex: "mock-public-key-hex",
-          aptosAddress: mockAddress
-        },
-        rawData: new Uint8Array(32)
-      };
-      
-      console.log("==== Mock Passkey Created Successfully ===");
-      console.log("Credential ID:", mockCredentialInfo.id);
-      console.log("Aptos Address:", mockCredentialInfo.publicKey.aptosAddress);
-      
-      // Save to local storage
-      localStorage.setItem("credentialData", JSON.stringify(mockCredentialInfo));
-      localStorage.setItem("credentialId", mockCredentialId);
-      
-      // Update state
-      setCredentialId(mockCredentialId);
-      setPasskeyInfo(mockCredentialInfo);
-      setShowSuccessMessage(true);
-      
-      // Call onSignInSuccess if provided
-      if (onSignInSuccess) {
-        onSignInSuccess(mockCredentialInfo.publicKey.aptosAddress);
+      if (credential) {
+        const credentialInfo = getCredentialInfo(credential as PublicKeyCredential);
+        
+        if (credentialInfo) {
+          console.log("==== Passkey Created Successfully ===");
+          console.log("Credential ID:", credentialInfo.id);
+          console.log("Aptos Address:", credentialInfo.publicKey.aptosAddress);
+          
+          // Save to local storage
+          localStorage.setItem("credentialData", JSON.stringify(credentialInfo));
+          localStorage.setItem("credentialId", credentialInfo.id);
+          
+          // Update state
+          setCredentialId(credentialInfo.id);
+          setPasskeyInfo(credentialInfo);
+          setShowSuccessMessage(true);
+          
+          // Trigger confetti for passkey creation success
+          triggerConfetti('celebration');
+          
+          // Call onSignInSuccess if provided
+          if (onSignInSuccess) {
+            onSignInSuccess(credentialInfo.publicKey.aptosAddress);
+          }
+        } else {
+          throw new Error("Failed to get credential info");
+        }
+      } else {
+        throw new Error("Credential creation failed");
       }
       
     } catch (error: any) {
@@ -74,7 +71,6 @@ const SignInModal = ({ open, onOpenChange, onSignInSuccess }: SignInModalProps) 
     }
   };
 
-  // Simulate sign-in with existing passkey
   const signInWithPasskey = async () => {
     if (!credentialId) {
       setErrorMessage("No registered credential");
@@ -85,10 +81,6 @@ const SignInModal = ({ open, onOpenChange, onSignInSuccess }: SignInModalProps) 
       setIsSigningIn(true);
       setErrorMessage(null);
 
-      // Simulate a delay to make it feel like authentication is happening
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Get saved credential data to retrieve address
       const savedCredential = localStorage.getItem("credentialData");
       if (savedCredential && onSignInSuccess) {
         try {

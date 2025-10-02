@@ -33,22 +33,22 @@ const features = [
 
 const FeatureCards = () => {
   return (
-    <section className="py-8 px-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+    <section className="py-6 sm:py-8 px-4 sm:px-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 max-w-4xl">
         {features.map((feature, index) => (
           <div
             key={index}
-            className="bg-surface/80 border border-card-border rounded-xl p-6 hover:bg-surface transition-all duration-200 hover:border-primary/20"
+            className="bg-surface/80 border border-card-border rounded-xl p-4 sm:p-6 hover:bg-surface transition-all duration-200 hover:border-primary/20"
           >
-            <div className="flex items-start gap-4">
-              <div className={`p-3 rounded-lg ${feature.bgColor}`}>
-                <feature.icon className={`h-5 w-5 ${feature.color}`} />
+            <div className="flex items-start gap-3 sm:gap-4">
+              <div className={`p-2 sm:p-3 rounded-lg ${feature.bgColor} flex-shrink-0`}>
+                <feature.icon className={`h-4 w-4 sm:h-5 sm:w-5 ${feature.color}`} />
               </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold mb-1 sm:mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-muted-foreground text-sm leading-relaxed">
+                <p className="text-muted-foreground text-xs sm:text-sm leading-relaxed">
                   {feature.description}
                 </p>
               </div>

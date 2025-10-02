@@ -29,7 +29,7 @@ const PasskeyInfo = () => {
   };
 
   const openAptosExplorer = (address: string) => {
-    window.open(`https://explorer.aptoslabs.com/account/${address}?network=devnet`, '_blank');
+    window.open(`https://explorer.aptoslabs.com/txn/${address}?network=devnet`, '_blank');
   };
 
   if (!credentialData) {

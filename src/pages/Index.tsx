@@ -18,7 +18,7 @@ const Index = () => {
             <Header />
             
             <main className="container mx-auto max-w-7xl">
-              <div className="grid lg:grid-cols-12 gap-8">
+              <div className="grid lg:grid-cols-12 gap-4 sm:gap-6 lg:gap-8">
                 {/* Main Content */}
                 <div className="lg:col-span-6">
                   <HeroSection />
@@ -27,8 +27,8 @@ const Index = () => {
                 </div>
                 
                 {/* Demo Sidebar */}
-                <div className="lg:col-span-6 px-2 py-6 lg:px-6 lg:py-12">
-                  <div className="lg:sticky top-8 space-y-6">
+                <div className="lg:col-span-6 px-2 py-4 sm:py-6 lg:px-6 lg:py-12">
+                  <div className="lg:sticky top-4 lg:top-8 space-y-4 sm:space-y-6">
                     <DemoSection />
                   </div>
                 </div>

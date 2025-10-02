@@ -35,21 +35,21 @@ export const NETWORKS: Record<string, NetworkConfig> = {
     network: Network.DEVNET,
     fullnodeUrl: "https://fullnode.devnet.aptoslabs.com",
     faucetUrl: "https://faucet.devnet.aptoslabs.com",
-    explorerUrl: "https://explorer.aptoslabs.com/account",
+    explorerUrl: "https://explorer.aptoslabs.com/txn",
   },
   TESTNET: {
     name: "Testnet",
     network: Network.TESTNET,
     fullnodeUrl: "https://fullnode.testnet.aptoslabs.com",
     faucetUrl: "https://faucet.testnet.aptoslabs.com",
-    explorerUrl: "https://explorer.aptoslabs.com/account",
+    explorerUrl: "https://explorer.aptoslabs.com/txn",
   },
   MAINNET: {
     name: "Mainnet",
     network: Network.MAINNET,
     fullnodeUrl: "https://fullnode.mainnet.aptoslabs.com",
     faucetUrl: null,
-    explorerUrl: "https://explorer.aptoslabs.com/account",
+    explorerUrl: "https://explorer.aptoslabs.com/txn",
   }
 };
 
@@ -237,6 +237,291 @@ export async function getPortfolio(address: string) {
     return await response.json();
   } catch (error) {
     console.error("Failed to fetch portfolio:", error);
+    throw error;
+  }
+}
+
+/**
+ * Execute transfer transaction on Aptos network
+ */
+export async function submitTransfer(
+  credentialId?: string,
+  senderAddress?: string,
+  receiverAddress?: string,
+  amount?: number
+) {
+
+  if (!credentialId) {
+    throw new Error("Please create a Passkey credential first");
+  }
+  try {
+
+    // Use passkey
+    // Read current public key to calculate address
+    
+
+    // Create account
+  
+
+    // Get account address
+    const savedCredential = window.localStorage.getItem("credentialData");
+    
+    if (!savedCredential) {
+      throw new Error("Please create a Passkey credential first");
+    }
+    const credentialData = JSON.parse(savedCredential);
+    
+    // Use passed parameters or default values
+    const finalSenderAddress = senderAddress || credentialData.publicKey.aptosAddress;
+    const finalReceiverAddress = receiverAddress || "0x1234567890123456789012345678901234567890123456789012345678901234";
+    const finalAmount = amount || 1000; // Default 0.001 APT (1000 smallest units)
+    
+    console.log(`=== ${currentNetwork.name} Transfer Transaction ===`);
+    console.log("Sender Address:", finalSenderAddress);
+    console.log("Receiver Address:", finalReceiverAddress);
+    console.log("Transfer Amount:", finalAmount, "smallest units");
+    console.log("Network:", currentNetwork.name);
+    
+
+    console.log(aptosClient)
+    // build raw transaction
+
+    const simpleTxn = await aptosClient.transaction.build.simple({
+      sender: finalSenderAddress,
+      data: {
+        function: "0x1::aptos_account::transfer",
+        functionArguments: [
+          finalReceiverAddress,
+          finalAmount,
+        ],
+        typeArguments: [],
+      },
+      options: {
+        maxGasAmount: 2000,
+        gasUnitPrice: 100
+      }
+    });
+    console.log("rawTxn", simpleTxn.rawTransaction);
+    
+    // Calculate challenge
+
+    const message = generateSigningMessageForTransaction(simpleTxn);
+    console.log("message", message);
+
+    const challenge = sha3_256(message);
+    console.log("challenge", challenge);
+
+    // Sign
+
+    const allowedCredentials: PublicKeyCredentialDescriptor[] = [
+      {
+        type: "public-key",
+        id: Buffer.from(credentialId, "base64"),
+      },
+    ];
+
+    const publicKey: PublicKeyCredentialRequestOptions = {
+      challenge: challenge.buffer as ArrayBuffer,                    // Challenge - convert to ArrayBuffer
+      allowCredentials: allowedCredentials,  // Allowed credentials
+      extensions: {},              // Extensions
+    };
+  
+    let credential = await navigator.credentials.get({
+      publicKey,
+    });
+
+    console.log("credential", credential);
+
+    if (!credential) {
+      throw new Error("Failed to get credential");
+    }
+
+    const { clientDataJSON, authenticatorData, signature } = (credential as PublicKeyCredential).response as AuthenticatorAssertionResponse;
+
+    console.log("clientDataJSON", Buffer.from(clientDataJSON).toString("utf-8"));
+    console.log("authenticatorData", Buffer.from(authenticatorData).toString("utf-8"));
+    console.log("signature", Buffer.from(signature).toString("utf-8"));
+
+    const signatureCompact = normalizeS(new Uint8Array(signature), 'der', 'compact');
+    console.log("signatureCompact", signatureCompact);
+
+
+    const transactionAuthenticator = new TransactionAuthenticatorSingleSender(
+      new AccountAuthenticatorSingleKey(new AnyPublicKey(
+        new Secp256r1PublicKey(Hex.fromHexInput(credentialData.publicKey.hex).toUint8Array()),
+      ),
+      new AnySignature(new WebAuthnSignature(signatureCompact, new Uint8Array(authenticatorData), new Uint8Array(clientDataJSON)))
+    ),
+    );
+    console.log("transactionAuthenticator", transactionAuthenticator.bcsToHex().toString());
+
+    // Submit transaction
+    
+    const result = await aptosClient.transaction.submit.simple({
+      transaction: simpleTxn,
+      senderAuthenticator: new AccountAuthenticatorSingleKey(new AnyPublicKey(
+        new Secp256r1PublicKey(Hex.fromHexInput(credentialData.publicKey.hex).toUint8Array()),
+      ),
+      new AnySignature(new WebAuthnSignature(signatureCompact, new Uint8Array(authenticatorData), new Uint8Array(clientDataJSON))),
+    )});
+
+    
+
+    // Return transaction hash
+    if (result.hash) {
+      return result.hash;
+    } else {
+      throw new Error("Failed to get transaction hash");
+    }
+  } catch (error) {
+    console.error("Transfer transaction failed:", error);
+    throw error;
+  }
+}
+
+/**
+ * Transaction status check with timeout loop
+ */
+export async function checkTransactionStatusWithTimeout(transactionHash: string): Promise<string> {
+  const maxAttempts = 10; // 10 second timeout
+  const intervalMs = 1000; // Check every 1 second
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      console.log(`Attempt ${attempt} to check transaction status...`);
+      
+      const response = await fetch(
+        `${currentNetwork.fullnodeUrl}/v1/transactions/by_hash/${transactionHash}`
+      );
+      
+      if (!response.ok) {
+        if (response.status === 404) {
+          // Transaction not yet on-chain, continue waiting
+          if (attempt < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, intervalMs));
+            continue;
+          } else {
+            return "Transaction check timeout: Not on-chain within 10 seconds";
+          }
+        } else {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+      }
+      
+      const transaction = await response.json();
+      console.log(`Transaction response (attempt ${attempt}):`, transaction);
+      
+      // Aptos transaction status check logic
+      if (transaction.success === true) {
+        return "Transaction successfully on-chain";
+      } else if (transaction.success === false) {
+        return `Transaction failed: ${transaction.vm_status || 'Unknown error'}`;
+      } else {
+        // Check other possible success flags
+        if (transaction.vm_status === "Executed successfully") {
+          return "Transaction successfully on-chain";
+        } else if (transaction.vm_status && transaction.vm_status !== "Executed successfully") {
+          return `Transaction failed: ${transaction.vm_status}`;
+        } else {
+          // If no clear status, check if transaction exists on-chain
+          if (transaction.hash) {
+            return "Transaction successfully on-chain";
+          } else {
+            return "Transaction status unknown";
+          }
+        }
+      }
+      
+    } catch (error) {
+      console.error(`Attempt ${attempt} failed:`, error);
+      
+      if (attempt < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, intervalMs));
+        continue;
+      } else {
+        return `Transaction check failed: ${error instanceof Error ? error.message : String(error)}`;
+      }
+    }
+  }
+  
+  return "Transaction check timeout";
+}
+
+/**
+ * Execute a swap transaction on the Aptos network using a passkey
+ */
+export async function swapWithPasskey(
+  credentialId: string,
+  fromType: string,
+  toType: string,
+  amountIn: number,
+  minOut: number
+) {
+  if (!credentialId) {
+    throw new Error("Please create a Passkey credential first");
+  }
+  try {
+    const savedCredential = window.localStorage.getItem("credentialData");
+    if (!savedCredential) {
+      throw new Error("Please create a Passkey credential first");
+    }
+    const credentialData = JSON.parse(savedCredential);
+    const senderAddress = credentialData.publicKey.aptosAddress;
+
+    const MODULE_ADDRESS = "0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12";
+    const curveType = "0x190d44266241744264b964a37b8f09863167a12d3e70cda39376cfb4e3561e12::curves::Uncorrelated";
+
+    const simpleTxn = await aptosClient.transaction.build.simple({
+      sender: senderAddress,
+      data: {
+        function: `${MODULE_ADDRESS}::scripts_v3::swap`,
+        typeArguments: [fromType, toType, curveType],
+        functionArguments: [amountIn, minOut],
+      },
+    });
+
+    const message = generateSigningMessageForTransaction(simpleTxn);
+    const challenge = sha3_256(message);
+
+    const allowedCredentials: PublicKeyCredentialDescriptor[] = [
+      {
+        type: "public-key",
+        id: Buffer.from(credentialId, "base64"),
+      },
+    ];
+
+    const publicKey: PublicKeyCredentialRequestOptions = {
+      challenge: challenge.buffer as ArrayBuffer,
+      allowCredentials: allowedCredentials,
+      extensions: {},
+    };
+
+    const credential = await navigator.credentials.get({
+      publicKey,
+    });
+
+    if (!credential) {
+      throw new Error("Failed to get credential");
+    }
+
+    const { clientDataJSON, authenticatorData, signature } = (credential as PublicKeyCredential).response as AuthenticatorAssertionResponse;
+    const signatureCompact = normalizeS(new Uint8Array(signature), 'der', 'compact');
+
+    const result = await aptosClient.transaction.submit.simple({
+      transaction: simpleTxn,
+      senderAuthenticator: new AccountAuthenticatorSingleKey(
+        new AnyPublicKey(new Secp256r1PublicKey(Hex.fromHexInput(credentialData.publicKey.hex).toUint8Array())),
+        new AnySignature(new WebAuthnSignature(signatureCompact, new Uint8Array(authenticatorData), new Uint8Array(clientDataJSON)))
+      ),
+    });
+
+    if (result.hash) {
+      return result.hash;
+    } else {
+      throw new Error("Failed to get transaction hash");
+    }
+  } catch (error) {
+    console.error("Swap transaction failed:", error);
     throw error;
   }
 }
