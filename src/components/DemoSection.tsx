@@ -833,7 +833,7 @@ const DemoSection = () => {
         
         {/* Demo Sign In Button */}
         <div className="mb-8 flex-grow flex flex-col justify-center">
-          <h2 className="text-2xl font-semibold mb-6 text-foreground">Forget passwords</h2>
+          <h2 className="text-2xl font-semibold mb-6 text-foreground">Forget seed phases</h2>
           <p className="text-muted-foreground mb-8 text-base">
             Ramtos is the fastest and most secure way to sign in.
           </p>

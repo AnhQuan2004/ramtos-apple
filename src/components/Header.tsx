@@ -35,7 +35,7 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Desktop Navigation */}
+        {/* Desktop Navigation
         <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
           <a
             href="#"
@@ -61,7 +61,7 @@ const Header = () => {
           >
             Changelog
           </a>
-        </nav>
+        </nav> */}
 
         {/* Mobile Menu Button */}
         <Button
