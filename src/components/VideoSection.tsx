@@ -15,7 +15,7 @@ const VideoSection = () => {
           </p>
           
           <div className="relative w-full max-w-5xl mx-auto aspect-video bg-black/50 rounded-2xl overflow-hidden border border-white/10 shadow-2xl">
-            <img src="/external-device.gif" alt="Ramtos Demo" className="absolute inset-0 w-full h-full object-contain" />
+            <img src="https://media-gif.s3.ap-southeast-1.amazonaws.com/device-passkey.gif" alt="Ramtos Demo" className="absolute inset-0 w-full h-full object-contain" />
           </div>
           
           <div className="mt-16 flex flex-col items-center">
